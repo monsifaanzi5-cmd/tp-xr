@@ -238,6 +238,26 @@ AFRAME.registerComponent('teleport-sol', {
     });
   }
 });
+  
+document.querySelector('#resetBtn').addEventListener('click', () => {
+  const positions = {
+    bistouri: '-0.9 0.82 -1',
+    pince: '-0.6 0.84 -1',
+    ecarteur: '-0.3 0.83 -1'
+  };
+
+  Object.entries(positions).forEach(([id, position]) => {
+    const instrument = document.getElementById(id);
+    instrument.setAttribute('position', position);
+    delete instrument.dataset.place;
+  });
+
+  selection = null;
+  score = 0;
+
+  message('Mission réinitialisée ! Score : 0/3');
+});
+
 </script>
 </body>
 </html>
