@@ -128,7 +128,104 @@
 </a-scene>
 
 <script>
-/* EMPLACEMENT DU SCRIPT */
+
+let selection = null;
+let score = 0;
+
+function message(texte) {
+  document.querySelector('#hud').textContent = texte;
+}
+
+function bip(frequence = 600) {
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return;
+  const ctx = new AudioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.frequency.value = frequence;
+  gain.gain.value = 0.08;
+
+  osc.start();
+  osc.stop(ctx.currentTime + 0.12);
+  osc.onended = () => ctx.close();
+}
+
+AFRAME.registerComponent('instrument', {
+  schema: {
+    nom: {type: 'string'},
+    zone: {type: 'string'}
+  },
+
+  init: function () {
+    this.el.addEventListener('click', () => {
+      if (this.el.dataset.place === 'oui') return;
+
+      selection = this.el;
+      message('Instrument sélectionné : ' + this.data.nom +
+              '. Visez sa zone de dépôt.');
+      bip(500);
+    });
+  }
+});
+
+AFRAME.registerComponent('zone-depot', {
+  init: function () {
+    this.el.addEventListener('click', () => {
+      if (!selection) {
+        message('Sélectionnez d’abord un instrument.');
+        return;
+      }
+
+      const zoneCorrecte = selection.getAttribute('instrument').zone;
+
+      if (this.el.id === zoneCorrecte) {
+        const position = this.el.getAttribute('position');
+
+        selection.setAttribute('position', {
+          x: position.x,
+          y: position.y + 0.08,
+          z: position.z
+        });
+
+        selection.dataset.place = 'oui';
+        selection = null;
+        score++;
+
+        bip(900);
+        message('Bravo ! Instrument bien placé. Score : ' + score + '/3');
+
+        if (score === 3) {
+          message('Mission réussie ! Tous les instruments sont placés.');
+        }
+      } else {
+        bip(200);
+        message('Mauvaise zone ! Essayez encore.');
+      }
+    });
+  }
+});
+
+AFRAME.registerComponent('teleport-sol', {
+  init: function () {
+    this.el.addEventListener('click', (evt) => {
+      if (!evt.detail.intersection) return;
+
+      const point = evt.detail.intersection.point;
+      const rig = document.querySelector('#rig');
+
+      rig.setAttribute('position', {
+        x: point.x,
+        y: 0,
+        z: point.z
+      });
+
+      message('Téléportation effectuée.');
+    });
+  }
+});
 </script>
 </body>
 </html>
